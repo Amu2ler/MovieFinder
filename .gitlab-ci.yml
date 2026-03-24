@@ -1,0 +1,40 @@
+variables:
+  SERVER: "168.231.87.230"
+  REMOTE_PATH: "/var/www/moviefinder"
+
+stages:
+  - build
+  - deploy
+
+before_script:
+  - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+  - mkdir -p ~/.ssh
+  - eval $(ssh-agent -s)
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
+build:
+  stage: build
+  image: node:20
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/dist
+
+deploy:
+  stage: deploy
+  script:
+    - ssh-add <(echo "$PRIVATE_KEY")
+    - scp -pr -o StrictHostKeyChecking=no frontend/dist/* root@$SERVER:$REMOTE_PATH/
+    - |
+      if git diff --name-only HEAD~1 HEAD | grep -q "^backend/"; then
+        scp -pr -o StrictHostKeyChecking=no backend/* root@$SERVER:$REMOTE_PATH/backend/
+        ssh -o StrictHostKeyChecking=no root@$SERVER "systemctl restart moviefinder"
+        echo "Backend déployé et redémarré."
+      else
+        echo "Pas de modif backend, skip."
+      fi
+  only:
+    - master
