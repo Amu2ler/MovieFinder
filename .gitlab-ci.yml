@@ -26,7 +26,9 @@ build:
 deploy:
   stage: deploy
   script:
-    - ssh-add <(echo "$PRIVATE_KEY")
+    - echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+    - ssh-add ~/.ssh/id_ed25519
     - scp -pr -o StrictHostKeyChecking=no frontend/dist/* root@$SERVER:$REMOTE_PATH/
     - |
       if git diff --name-only HEAD~1 HEAD | grep -q "^backend/"; then
