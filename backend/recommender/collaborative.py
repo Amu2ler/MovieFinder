@@ -3,9 +3,8 @@ Item-item collaborative filtering using NumPy.
 Falls back to pure content-based when fewer than MIN_USERS have interacted.
 """
 
-import json
+
 import numpy as np
-from typing import Optional
 
 MIN_USERS = 3  # minimum users needed before collab filtering kicks in
 
@@ -14,7 +13,7 @@ def build_interaction_matrix(
     interactions: list[dict],
     all_movie_ids: list[int],
     all_user_ids: list[int],
-) -> Optional[np.ndarray]:
+) -> np.ndarray | None:
     """
     Build a users × movies interaction matrix.
     +1 for like, -1 for dislike.

@@ -1,12 +1,13 @@
 import json
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from database import get_db
 from models import (
     LibraryEntryCreate,
-    LibraryEntryUpdate,
     LibraryEntryResponse,
+    LibraryEntryUpdate,
     LibraryResponse,
-    MovieResponse,
 )
 
 router = APIRouter(prefix="/library", tags=["library"])

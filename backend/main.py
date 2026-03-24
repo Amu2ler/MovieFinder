@@ -1,12 +1,14 @@
 from contextlib import asynccontextmanager
+
+import aiosqlite
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import create_tables, get_db
-from seed_data import seed
+
+import database
+from database import create_tables
 from recommender.engine import build_faiss_index
-from routers import users, movies, interactions, recommendations, library
-import aiosqlite
-from pathlib import Path
+from routers import interactions, library, movies, recommendations, users
+from seed_data import seed
 
 
 @asynccontextmanager
@@ -15,8 +17,7 @@ async def lifespan(app: FastAPI):
     await create_tables()
     await seed()
 
-    DB_PATH = Path(__file__).parent / "moviefinder.db"
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with aiosqlite.connect(database.DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         await build_faiss_index(db)
 

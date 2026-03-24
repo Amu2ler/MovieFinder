@@ -1,33 +1,33 @@
-import React from 'react'
-import { useDraggable } from '@dnd-kit/core'
-import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, X } from 'lucide-react'
-import StarRating from './StarRating'
+import React from "react";
+import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, X } from "lucide-react";
+import StarRating from "./StarRating";
 
 const POSTER_PLACEHOLDER = (title) => {
   const initials = title
-    .split(' ')
+    .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0].toUpperCase())
-    .join('')
-  const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300" viewBox="0 0 200 300"><rect width="200" height="300" fill="#12121e"/><text x="50%" y="42%" font-family="sans-serif" font-size="48" font-weight="bold" fill="#c49a2e" text-anchor="middle" dominant-baseline="middle">${initials}</text><text x="50%" y="62%" font-family="sans-serif" font-size="11" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">${safeTitle}</text></svg>`
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
-}
+    .join("");
+  const safeTitle = title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300" viewBox="0 0 200 300"><rect width="200" height="300" fill="#12121e"/><text x="50%" y="42%" font-family="sans-serif" font-size="48" font-weight="bold" fill="#c49a2e" text-anchor="middle" dominant-baseline="middle">${initials}</text><text x="50%" y="62%" font-family="sans-serif" font-size="11" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">${safeTitle}</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+};
 
 // Draggable tile — left sidebar
 export function SidebarMovieCard({ movie }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `sidebar-${movie.id}`,
-    data: { movie, source: 'sidebar' },
-  })
+    data: { movie, source: "sidebar" },
+  });
 
   const style = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.25 : 1,
-    zIndex: isDragging ? 50 : 'auto',
-  }
+    zIndex: isDragging ? 50 : "auto",
+  };
 
   return (
     <div
@@ -38,7 +38,10 @@ export function SidebarMovieCard({ movie }) {
       <img
         src={movie.poster_url || POSTER_PLACEHOLDER(movie.title)}
         alt={movie.title}
-        onError={(e) => { e.target.onerror = null; e.target.src = POSTER_PLACEHOLDER(movie.title) }}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = POSTER_PLACEHOLDER(movie.title);
+        }}
         className="w-10 h-16 object-cover rounded-lg shrink-0 shadow-md"
       />
       <div className="flex-1 min-w-0">
@@ -54,24 +57,24 @@ export function SidebarMovieCard({ movie }) {
         <GripVertical size={16} />
       </div>
     </div>
-  )
+  );
 }
 
 // Compact tile — right panel columns
 export function ColumnMovieCard({ entry, onDelete, onRate }) {
-  const title = entry.movie?.title || entry.custom_title || 'Film inconnu'
-  const year = entry.movie?.year
-  const posterUrl = entry.movie?.poster_url
+  const title = entry.movie?.title || entry.custom_title || "Film inconnu";
+  const year = entry.movie?.year;
+  const posterUrl = entry.movie?.poster_url;
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `entry-${entry.id}`,
-    data: { entry, source: 'column' },
-  })
+    data: { entry, source: "column" },
+  });
 
   const style = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.25 : 1,
-  }
+  };
 
   return (
     <div
@@ -83,7 +86,10 @@ export function ColumnMovieCard({ entry, onDelete, onRate }) {
         <img
           src={posterUrl || POSTER_PLACEHOLDER(title)}
           alt={title}
-          onError={(e) => { e.target.onerror = null; e.target.src = POSTER_PLACEHOLDER(title) }}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = POSTER_PLACEHOLDER(title);
+          }}
           className="w-11 h-16 object-cover rounded-lg shrink-0 shadow-md"
         />
         <div className="flex-1 min-w-0">
@@ -108,9 +114,9 @@ export function ColumnMovieCard({ entry, onDelete, onRate }) {
           </button>
         </div>
       </div>
-      {entry.list_type === 'watched' && (
+      {entry.list_type === "watched" && (
         <StarRating value={entry.rating || 0} onChange={(n) => onRate(entry.id, n)} />
       )}
     </div>
-  )
+  );
 }

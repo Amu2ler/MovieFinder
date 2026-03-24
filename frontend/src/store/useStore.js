@@ -1,9 +1,9 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 const useStore = create(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       // ── User ────────────────────────────────────────────────────────────
       userId: null,
       sessionToken: null,
@@ -18,15 +18,13 @@ const useStore = create(
       setOnboardingComplete: () => set({ onboardingComplete: true }),
 
       // ── Feed queue ──────────────────────────────────────────────────────
-      queue: [],        // array of {movie, score, is_exploration}
+      queue: [], // array of {movie, score, is_exploration}
       currentIndex: 0,
       isLoadingRecs: false,
 
       setQueue: (items) => set({ queue: items, currentIndex: 0 }),
-      appendQueue: (items) =>
-        set((s) => ({ queue: [...s.queue, ...items] })),
-      advanceQueue: () =>
-        set((s) => ({ currentIndex: s.currentIndex + 1 })),
+      appendQueue: (items) => set((s) => ({ queue: [...s.queue, ...items] })),
+      advanceQueue: () => set((s) => ({ currentIndex: s.currentIndex + 1 })),
 
       setLoadingRecs: (val) => set({ isLoadingRecs: val }),
 
@@ -47,9 +45,7 @@ const useStore = create(
 
       addBannedActor: (name) =>
         set((s) => ({
-          bannedActors: s.bannedActors.includes(name)
-            ? s.bannedActors
-            : [...s.bannedActors, name],
+          bannedActors: s.bannedActors.includes(name) ? s.bannedActors : [...s.bannedActors, name],
         })),
 
       // ── Tour ────────────────────────────────────────────────────────────
@@ -72,7 +68,7 @@ const useStore = create(
         }),
     }),
     {
-      name: 'moviefinder-store',
+      name: "moviefinder-store",
       partialize: (s) => ({
         userId: s.userId,
         sessionToken: s.sessionToken,
@@ -84,6 +80,6 @@ const useStore = create(
       }),
     }
   )
-)
+);
 
-export default useStore
+export default useStore;

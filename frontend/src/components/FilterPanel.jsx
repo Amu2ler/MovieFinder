@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
-import useStore from '../store/useStore'
-import { addHate } from '../api/client'
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import useStore from "../store/useStore";
+import { addHate } from "../api/client";
 
-const PLATFORMS = ['Netflix', 'Prime Video', 'Disney+', 'HBO Max', 'Mubi', 'Peacock', 'Paramount+']
+const PLATFORMS = ["Netflix", "Prime Video", "Disney+", "HBO Max", "Mubi", "Peacock", "Paramount+"];
 
 export default function FilterPanel({ onClose }) {
   const {
@@ -15,33 +15,33 @@ export default function FilterPanel({ onClose }) {
     bannedActors,
     addBannedDirector,
     addBannedActor,
-  } = useStore()
+  } = useStore();
 
-  const [hateInput, setHateInput] = useState('')
-  const [hateType, setHateType] = useState('director')
-  const [hateError, setHateError] = useState('')
+  const [hateInput, setHateInput] = useState("");
+  const [hateType, setHateType] = useState("director");
+  const [hateError, setHateError] = useState("");
 
   const togglePlatform = (platform) => {
     if (platformFilter.includes(platform)) {
-      setPlatformFilter(platformFilter.filter((p) => p !== platform))
+      setPlatformFilter(platformFilter.filter((p) => p !== platform));
     } else {
-      setPlatformFilter([...platformFilter, platform])
+      setPlatformFilter([...platformFilter, platform]);
     }
-  }
+  };
 
   const handleAddHate = async () => {
-    const name = hateInput.trim()
-    if (!name) return
-    setHateError('')
+    const name = hateInput.trim();
+    if (!name) return;
+    setHateError("");
     try {
-      await addHate(userId, hateType, name)
-      if (hateType === 'director') addBannedDirector(name)
-      else addBannedActor(name)
-      setHateInput('')
+      await addHate(userId, hateType, name);
+      if (hateType === "director") addBannedDirector(name);
+      else addBannedActor(name);
+      setHateInput("");
     } catch {
-      setHateError("Erreur lors de l'ajout. Réessaie.")
+      setHateError("Erreur lors de l'ajout. Réessaie.");
     }
-  }
+  };
 
   return (
     <AnimatePresence>
@@ -55,10 +55,10 @@ export default function FilterPanel({ onClose }) {
 
         <motion.div
           className="relative h-full w-80 bg-[#0e0e1c] border-l border-white/8 p-6 overflow-y-auto"
-          initial={{ x: '100%' }}
+          initial={{ x: "100%" }}
           animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          exit={{ x: "100%" }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-white font-bold text-lg tracking-tight">Filtres</h2>
@@ -79,8 +79,8 @@ export default function FilterPanel({ onClose }) {
                   onClick={() => togglePlatform(p)}
                   className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                     platformFilter.includes(p)
-                      ? 'bg-brand-500 border-brand-500 text-white font-medium'
-                      : 'bg-transparent border-white/15 text-slate-400 hover:border-white/30 hover:text-white'
+                      ? "bg-brand-500 border-brand-500 text-white font-medium"
+                      : "bg-transparent border-white/15 text-slate-400 hover:border-white/30 hover:text-white"
                   }`}
                 >
                   {p}
@@ -105,21 +105,21 @@ export default function FilterPanel({ onClose }) {
 
             <div className="flex gap-2 mb-3">
               <button
-                onClick={() => setHateType('director')}
+                onClick={() => setHateType("director")}
                 className={`flex-1 py-1.5 rounded-lg text-sm transition-colors ${
-                  hateType === 'director'
-                    ? 'bg-brand-500 text-white font-medium'
-                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                  hateType === "director"
+                    ? "bg-brand-500 text-white font-medium"
+                    : "bg-white/5 text-slate-400 hover:bg-white/10"
                 }`}
               >
                 Réalisateur
               </button>
               <button
-                onClick={() => setHateType('actor')}
+                onClick={() => setHateType("actor")}
                 className={`flex-1 py-1.5 rounded-lg text-sm transition-colors ${
-                  hateType === 'actor'
-                    ? 'bg-brand-500 text-white font-medium'
-                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                  hateType === "actor"
+                    ? "bg-brand-500 text-white font-medium"
+                    : "bg-white/5 text-slate-400 hover:bg-white/10"
                 }`}
               >
                 Acteur
@@ -131,8 +131,8 @@ export default function FilterPanel({ onClose }) {
                 type="text"
                 value={hateInput}
                 onChange={(e) => setHateInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddHate()}
-                placeholder={hateType === 'director' ? 'Ex: Michael Bay' : 'Ex: Vin Diesel'}
+                onKeyDown={(e) => e.key === "Enter" && handleAddHate()}
+                placeholder={hateType === "director" ? "Ex: Michael Bay" : "Ex: Vin Diesel"}
                 className="flex-1 bg-[#080810] border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-500 transition-colors"
               />
               <button
@@ -147,10 +147,15 @@ export default function FilterPanel({ onClose }) {
 
             {bannedDirectors.length > 0 && (
               <div className="mb-3">
-                <p className="text-xs text-slate-600 mb-2 uppercase tracking-wider">Réalisateurs bannis</p>
+                <p className="text-xs text-slate-600 mb-2 uppercase tracking-wider">
+                  Réalisateurs bannis
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {bannedDirectors.map((d) => (
-                    <span key={d} className="px-2.5 py-0.5 bg-red-500/15 text-red-400 border border-red-500/20 rounded-full text-xs">
+                    <span
+                      key={d}
+                      className="px-2.5 py-0.5 bg-red-500/15 text-red-400 border border-red-500/20 rounded-full text-xs"
+                    >
                       {d}
                     </span>
                   ))}
@@ -159,10 +164,15 @@ export default function FilterPanel({ onClose }) {
             )}
             {bannedActors.length > 0 && (
               <div>
-                <p className="text-xs text-slate-600 mb-2 uppercase tracking-wider">Acteurs bannis</p>
+                <p className="text-xs text-slate-600 mb-2 uppercase tracking-wider">
+                  Acteurs bannis
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {bannedActors.map((a) => (
-                    <span key={a} className="px-2.5 py-0.5 bg-red-500/15 text-red-400 border border-red-500/20 rounded-full text-xs">
+                    <span
+                      key={a}
+                      className="px-2.5 py-0.5 bg-red-500/15 text-red-400 border border-red-500/20 rounded-full text-xs"
+                    >
                       {a}
                     </span>
                   ))}
@@ -173,5 +183,5 @@ export default function FilterPanel({ onClose }) {
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }

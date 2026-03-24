@@ -1,61 +1,61 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Check } from 'lucide-react'
-import { searchMovies } from '../../api/client'
-import StarRating from './StarRating'
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Check } from "lucide-react";
+import { searchMovies } from "../../api/client";
+import StarRating from "./StarRating";
 
 export default function AddMovieModal({ onClose, onAdd }) {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState([])
-  const [selected, setSelected] = useState(null)
-  const [listType, setListType] = useState('to_watch')
-  const [rating, setRating] = useState(0)
-  const [searching, setSearching] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const inputRef = useRef(null)
-  const debounceRef = useRef(null)
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [listType, setListType] = useState("to_watch");
+  const [rating, setRating] = useState(0);
+  const [searching, setSearching] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const inputRef = useRef(null);
+  const debounceRef = useRef(null);
 
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    inputRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     if (!query.trim()) {
-      setResults([])
-      return
+      setResults([]);
+      return;
     }
-    clearTimeout(debounceRef.current)
+    clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      setSearching(true)
+      setSearching(true);
       try {
-        const data = await searchMovies(query.trim())
-        setResults(data)
+        const data = await searchMovies(query.trim());
+        setResults(data);
       } catch {
-        setResults([])
+        setResults([]);
       } finally {
-        setSearching(false)
+        setSearching(false);
       }
-    }, 300)
-    return () => clearTimeout(debounceRef.current)
-  }, [query])
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [query]);
 
   const handleSubmit = async () => {
-    if (!selected && !query.trim()) return
-    if (listType === 'watched' && rating === 0) return
+    if (!selected && !query.trim()) return;
+    if (listType === "watched" && rating === 0) return;
 
-    setSubmitting(true)
+    setSubmitting(true);
     try {
       await onAdd({
         movie_id: selected?.id ?? null,
         custom_title: selected ? null : query.trim(),
         list_type: listType,
-        rating: listType === 'watched' ? rating : null,
-      })
-      onClose()
+        rating: listType === "watched" ? rating : null,
+      });
+      onClose();
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <AnimatePresence>
@@ -71,15 +71,12 @@ export default function AddMovieModal({ onClose, onAdd }) {
           initial={{ y: 60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 60, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
           {/* Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-white font-semibold tracking-tight">Ajouter un film</h2>
-            <button
-              onClick={onClose}
-              className="text-slate-500 hover:text-white transition-colors"
-            >
+            <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
               <X size={18} />
             </button>
           </div>
@@ -91,7 +88,10 @@ export default function AddMovieModal({ onClose, onAdd }) {
               type="text"
               placeholder="Titre du film…"
               value={query}
-              onChange={(e) => { setQuery(e.target.value); setSelected(null) }}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSelected(null);
+              }}
               className="w-full bg-[#080810] border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-brand-500 transition-colors"
             />
             {searching && (
@@ -107,13 +107,17 @@ export default function AddMovieModal({ onClose, onAdd }) {
               {results.map((movie) => (
                 <button
                   key={movie.id}
-                  onClick={() => { setSelected(movie); setQuery(movie.title) }}
+                  onClick={() => {
+                    setSelected(movie);
+                    setQuery(movie.title);
+                  }}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/8 transition-colors text-left"
                 >
                   <div className="text-left flex-1">
                     <p className="text-white text-sm font-medium">{movie.title}</p>
                     <p className="text-slate-500 text-xs">
-                      {movie.year}{movie.director ? ` · ${movie.director}` : ''}
+                      {movie.year}
+                      {movie.director ? ` · ${movie.director}` : ""}
                     </p>
                   </div>
                 </button>
@@ -128,10 +132,15 @@ export default function AddMovieModal({ onClose, onAdd }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-medium truncate">{selected.title}</p>
-                <p className="text-slate-400 text-xs">{selected.year} · {selected.director}</p>
+                <p className="text-slate-400 text-xs">
+                  {selected.year} · {selected.director}
+                </p>
               </div>
               <button
-                onClick={() => { setSelected(null); setQuery('') }}
+                onClick={() => {
+                  setSelected(null);
+                  setQuery("");
+                }}
                 className="text-slate-600 hover:text-white transition-colors shrink-0"
               >
                 <X size={14} />
@@ -144,16 +153,16 @@ export default function AddMovieModal({ onClose, onAdd }) {
             <p className="text-slate-500 text-xs mb-2 uppercase tracking-wider">Ajouter à</p>
             <div className="flex gap-2">
               {[
-                { value: 'to_watch', label: 'À voir' },
-                { value: 'watched', label: 'Déjà vu' },
+                { value: "to_watch", label: "À voir" },
+                { value: "watched", label: "Déjà vu" },
               ].map(({ value, label }) => (
                 <button
                   key={value}
                   onClick={() => setListType(value)}
                   className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
                     listType === value
-                      ? 'bg-brand-500 text-white'
-                      : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-white/8'
+                      ? "bg-brand-500 text-white"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10 border border-white/8"
                   }`}
                 >
                   {label}
@@ -163,10 +172,11 @@ export default function AddMovieModal({ onClose, onAdd }) {
           </div>
 
           {/* Rating (only for watched) */}
-          {listType === 'watched' && (
+          {listType === "watched" && (
             <div>
               <p className="text-slate-500 text-xs mb-2 uppercase tracking-wider">
-                Note {rating === 0 && <span className="text-red-400 normal-case">(obligatoire)</span>}
+                Note{" "}
+                {rating === 0 && <span className="text-red-400 normal-case">(obligatoire)</span>}
               </p>
               <StarRating value={rating} onChange={setRating} />
             </div>
@@ -175,13 +185,15 @@ export default function AddMovieModal({ onClose, onAdd }) {
           {/* Submit */}
           <button
             onClick={handleSubmit}
-            disabled={submitting || (!selected && !query.trim()) || (listType === 'watched' && rating === 0)}
+            disabled={
+              submitting || (!selected && !query.trim()) || (listType === "watched" && rating === 0)
+            }
             className="w-full py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-brand-900/20"
           >
-            {submitting ? 'Ajout en cours…' : 'Ajouter à ma liste'}
+            {submitting ? "Ajout en cours…" : "Ajouter à ma liste"}
           </button>
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }

@@ -55,7 +55,7 @@ def explain(
                 reverse=True,
             )
 
-            for val, dim in ranked[:top_n]:
+            for _val, dim in ranked[:top_n]:
                 label = DIMENSION_LABELS[dim]
                 reasons.append(f"Correspond à votre goût pour {label}")
                 if len(reasons) >= 3:

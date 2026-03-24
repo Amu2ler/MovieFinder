@@ -1,5 +1,7 @@
 import json
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+
 from database import get_db
 from models import MovieResponse
 

@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 export default function StarRating({ value = 0, onChange, readonly = false }) {
   return (
@@ -10,18 +10,16 @@ export default function StarRating({ value = 0, onChange, readonly = false }) {
           disabled={readonly}
           onClick={() => onChange?.(star)}
           className={`text-xl leading-none transition-transform ${
-            readonly ? 'cursor-default' : 'hover:scale-125 cursor-pointer'
-          } ${star <= value ? 'text-yellow-400' : 'text-slate-700'}`}
-          aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
+            readonly ? "cursor-default" : "hover:scale-125 cursor-pointer"
+          } ${star <= value ? "text-yellow-400" : "text-slate-700"}`}
+          aria-label={`${star} étoile${star > 1 ? "s" : ""}`}
         >
           ★
         </button>
       ))}
       {value > 0 && (
-        <span className="ml-2 text-sm text-slate-400 font-medium tabular-nums">
-          {value}/10
-        </span>
+        <span className="ml-2 text-sm text-slate-400 font-medium tabular-nums">{value}/10</span>
       )}
     </div>
-  )
+  );
 }

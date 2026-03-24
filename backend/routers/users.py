@@ -1,8 +1,10 @@
 import json
 import secrets
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from database import get_db
-from models import UserCreate, UserResponse, HateRequest
+from models import HateRequest, UserResponse
 
 router = APIRouter(prefix="/users", tags=["users"])
 

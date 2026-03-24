@@ -1,7 +1,9 @@
 import json
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+
 from database import get_db
-from models import RecommendationItem, MovieResponse, WhyThisResponse
+from models import RecommendationItem, WhyThisResponse
 from recommender.engine import get_recommendations, get_why_this
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])

@@ -107,7 +107,7 @@ MovieFinder/
 ```bash
 cd MovieFinder/backend
 pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn main:app --reload 
 ```
 
 ### Démarrer le frontend

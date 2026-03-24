@@ -1,6 +1,5 @@
+
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
 
 
 class UserCreate(BaseModel):
@@ -23,15 +22,15 @@ class HateRequest(BaseModel):
 
 class MovieResponse(BaseModel):
     id: int
-    tmdb_id: Optional[int]
+    tmdb_id: int | None
     title: str
-    year: Optional[int]
-    director: Optional[str]
-    director_id: Optional[str]
+    year: int | None
+    director: str | None
+    director_id: str | None
     cast: list[str]
     genres: list[str]
-    synopsis: Optional[str]
-    poster_url: Optional[str]
+    synopsis: str | None
+    poster_url: str | None
     streaming_platforms: list[str]
     avg_rating: float
     is_onboarding: bool
@@ -64,27 +63,27 @@ class WhyThisResponse(BaseModel):
 
 
 class LibraryEntryCreate(BaseModel):
-    movie_id: Optional[int] = None
-    custom_title: Optional[str] = None
+    movie_id: int | None = None
+    custom_title: str | None = None
     list_type: str  # "to_watch" or "watched"
-    rating: Optional[int] = None  # 1-10, only for watched
+    rating: int | None = None  # 1-10, only for watched
 
 
 class LibraryEntryUpdate(BaseModel):
-    list_type: Optional[str] = None
-    rating: Optional[int] = None
-    position: Optional[int] = None
+    list_type: str | None = None
+    rating: int | None = None
+    position: int | None = None
 
 
 class LibraryEntryResponse(BaseModel):
     id: int
     user_id: int
-    movie_id: Optional[int]
-    custom_title: Optional[str]
+    movie_id: int | None
+    custom_title: str | None
     list_type: str
-    rating: Optional[int]
+    rating: int | None
     position: int
-    movie: Optional[MovieResponse]
+    movie: MovieResponse | None
 
 
 class LibraryResponse(BaseModel):

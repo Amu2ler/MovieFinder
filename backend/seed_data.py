@@ -14,9 +14,11 @@ Feature vector dimensions (20 total):
 import asyncio
 import json
 import math
-from database import create_tables
-import aiosqlite
 from pathlib import Path
+
+import aiosqlite
+
+from database import create_tables
 
 DB_PATH = Path(__file__).parent / "moviefinder.db"
 
@@ -352,18 +354,6 @@ MOVIES = [
         "avg_rating": 8.5,
         "is_onboarding": 0,
         "fv": [1,1,0,0, 0,0,0,1, 0,0, 1,0,0, 0.85, 1,0,0,0, 0,1],
-    },
-    {
-        "tmdb_id": 637649, "title": "Mad Max: Fury Road", "year": 2015,
-        "director": "George Miller", "director_id": "miller_g",
-        "cast": ["Tom Hardy", "Charlize Theron"],
-        "genres": ["Action", "SciFi"],
-        "synopsis": "Dans un monde post-apocalyptique, un ancien flic aide une impératrice à fuir un tyran.",
-        "poster_url": "https://image.tmdb.org/t/p/w500/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg",
-        "streaming_platforms": ["HBO Max"],
-        "avg_rating": 8.1,
-        "is_onboarding": 0,
-        "fv": [1,0,0,0, 0,1,0,0, 0,0, 0,0,1, 0.81, 1,0,0,0, 0,0],
     },
     # ── Comedy ────────────────────────────────────────────────────────────
     {
@@ -746,7 +736,7 @@ MOVIES = [
         "cast": ["Jack Nicholson", "Faye Dunaway", "John Huston"],
         "genres": ["Thriller", "Crime", "Drama"],
         "synopsis": "Un détective privé se retrouve impliqué dans une conspiration bien plus profonde qu'il ne le pensait.",
-        "poster_url": "https://image.tmdb.org/t/p/w500/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg",
+        "poster_url": "https://image.tmdb.org/t/p/w500/9chbM7rbh6o0Ok6v6mcT0a3GN9E.jpg",
         "streaming_platforms": ["Mubi"],
         "avg_rating": 8.1,
         "is_onboarding": 0,
@@ -1319,11 +1309,20 @@ async def seed():
         # Check if already seeded
         cursor = await db.execute("SELECT COUNT(*) FROM movies")
         count = (await cursor.fetchone())[0]
-        if count > 0:
+        if count >= len(MOVIES):
             print(f"Database already seeded with {count} movies. Skipping.")
             return
+        if count > 0:
+            print(f"Catalog updated: adding {len(MOVIES) - count} new movies (had {count}, need {len(MOVIES)}).")
 
+        # Fetch existing titles to avoid duplicates
+        cursor = await db.execute("SELECT title FROM movies")
+        existing_titles = {row[0] for row in await cursor.fetchall()}
+
+        inserted = 0
         for m in MOVIES:
+            if m["title"] in existing_titles:
+                continue
             fv = normalize(m["fv"])
             await db.execute(
                 """INSERT INTO movies
@@ -1347,8 +1346,9 @@ async def seed():
                     m["is_onboarding"],
                 ),
             )
+            inserted += 1
         await db.commit()
-        print(f"Seeded {len(MOVIES)} movies into the database.")
+        print(f"Seeded {inserted} movies into the database (total: {count + inserted}).")
 
 
 if __name__ == "__main__":

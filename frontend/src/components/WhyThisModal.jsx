@@ -1,9 +1,9 @@
-import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Film, X } from 'lucide-react'
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Film, X } from "lucide-react";
 
 export default function WhyThisModal({ data, onClose }) {
-  if (!data) return null
+  if (!data) return null;
 
   return (
     <AnimatePresence>
@@ -14,10 +14,7 @@ export default function WhyThisModal({ data, onClose }) {
         exit={{ opacity: 0 }}
       >
         {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-black/75 backdrop-blur-sm"
-          onClick={onClose}
-        />
+        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
 
         {/* Modal */}
         <motion.div
@@ -25,7 +22,7 @@ export default function WhyThisModal({ data, onClose }) {
           initial={{ y: 60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 60, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
           <div className="flex items-start justify-between gap-3 mb-5">
             <div className="flex items-center gap-3">
@@ -33,11 +30,16 @@ export default function WhyThisModal({ data, onClose }) {
                 <Film size={17} className="text-brand-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-widest mb-0.5">Pourquoi ce film ?</p>
+                <p className="text-xs text-slate-500 uppercase tracking-widest mb-0.5">
+                  Pourquoi ce film ?
+                </p>
                 <h3 className="text-white font-semibold leading-tight">{data.movie_title}</h3>
               </div>
             </div>
-            <button onClick={onClose} className="text-slate-600 hover:text-slate-400 transition-colors shrink-0 mt-0.5">
+            <button
+              onClick={onClose}
+              className="text-slate-600 hover:text-slate-400 transition-colors shrink-0 mt-0.5"
+            >
               <X size={18} />
             </button>
           </div>
@@ -62,5 +64,5 @@ export default function WhyThisModal({ data, onClose }) {
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }

@@ -1,19 +1,19 @@
-import React, { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import useStore from './store/useStore'
-import { createUser } from './api/client'
-import Onboarding from './pages/Onboarding'
-import Feed from './pages/Feed'
+import React, { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import useStore from "./store/useStore";
+import { createUser } from "./api/client";
+import Onboarding from "./pages/Onboarding";
+import Feed from "./pages/Feed";
 
 function App() {
-  const { userId, onboardingComplete, setUser } = useStore()
+  const { userId, onboardingComplete, setUser } = useStore();
 
   // Auto-create anonymous user on first visit
   useEffect(() => {
     if (!userId) {
-      createUser().then(setUser).catch(console.error)
+      createUser().then(setUser).catch(console.error);
     }
-  }, [userId, setUser])
+  }, [userId, setUser]);
 
   if (!userId) {
     return (
@@ -23,7 +23,7 @@ function App() {
           <p className="text-slate-400 text-sm">Initialisation…</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -42,13 +42,11 @@ function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route
           path="/feed"
-          element={
-            onboardingComplete ? <Feed /> : <Navigate to="/onboarding" replace />
-          }
+          element={onboardingComplete ? <Feed /> : <Navigate to="/onboarding" replace />}
         />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

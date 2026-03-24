@@ -1,5 +1,7 @@
 import json
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from database import get_db
 from models import InteractionCreate, InteractionResponse
 from recommender.content_based import update_taste_vector

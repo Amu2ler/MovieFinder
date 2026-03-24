@@ -7,8 +7,9 @@ and injects 5% exploration content.
 
 import json
 import random
-from .content_based import ContentBasedEngine
+
 from .collaborative import get_collab_scores
+from .content_based import ContentBasedEngine
 from .explainer import explain
 
 # Global singleton FAISS engine (loaded once at app startup)

@@ -1,28 +1,27 @@
-import React, { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { DndContext, DragOverlay, useDroppable } from '@dnd-kit/core'
-import { motion } from 'framer-motion'
-import useStore from '../store/useStore'
-import { getLibrary, addLibraryEntry, updateLibraryEntry, deleteLibraryEntry } from '../api/client'
-import { SidebarMovieCard, ColumnMovieCard } from '../components/library/LibraryMovieCard'
-import AddMovieModal from '../components/library/AddMovieModal'
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { DndContext, DragOverlay, useDroppable } from "@dnd-kit/core";
+import useStore from "../store/useStore";
+import { getLibrary, addLibraryEntry, updateLibraryEntry, deleteLibraryEntry } from "../api/client";
+import { SidebarMovieCard, ColumnMovieCard } from "../components/library/LibraryMovieCard";
+import AddMovieModal from "../components/library/AddMovieModal";
 
 // ── Droppable column ───────────────────────────────────────────────────────────
 function DroppableColumn({ id, title, entries, onDelete, onRate, emptyLabel }) {
-  const { setNodeRef, isOver } = useDroppable({ id })
+  const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
     <div
       ref={setNodeRef}
       className={`flex flex-col flex-1 min-w-0 rounded-2xl border transition-colors ${
-        isOver
-          ? 'border-brand-500/60 bg-brand-500/5'
-          : 'border-white/5 bg-white/3'
+        isOver ? "border-brand-500/60 bg-brand-500/5" : "border-white/5 bg-white/3"
       }`}
     >
       <div className="px-4 pt-4 pb-3 border-b border-white/5">
         <h2 className="text-white font-semibold text-sm">{title}</h2>
-        <p className="text-slate-500 text-xs mt-0.5">{entries.length} film{entries.length !== 1 ? 's' : ''}</p>
+        <p className="text-slate-500 text-xs mt-0.5">
+          {entries.length} film{entries.length !== 1 ? "s" : ""}
+        </p>
       </div>
       <div className="flex flex-col gap-2 p-3 overflow-y-auto flex-1">
         {entries.length === 0 ? (
@@ -31,22 +30,17 @@ function DroppableColumn({ id, title, entries, onDelete, onRate, emptyLabel }) {
           </div>
         ) : (
           entries.map((entry) => (
-            <ColumnMovieCard
-              key={entry.id}
-              entry={entry}
-              onDelete={onDelete}
-              onRate={onRate}
-            />
+            <ColumnMovieCard key={entry.id} entry={entry} onDelete={onDelete} onRate={onRate} />
           ))
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // ── Genre group in sidebar ────────────────────────────────────────────────────
 function GenreGroup({ genre, movies }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(true);
 
   return (
     <div className="mb-2">
@@ -57,7 +51,7 @@ function GenreGroup({ genre, movies }) {
         <span className="text-slate-300 text-xs font-semibold uppercase tracking-wider">
           {genre} ({movies.length})
         </span>
-        <span className="text-slate-600 text-xs">{open ? '▾' : '▸'}</span>
+        <span className="text-slate-600 text-xs">{open ? "▾" : "▸"}</span>
       </button>
       {open && (
         <div className="flex flex-col gap-1 mt-1">
@@ -67,139 +61,154 @@ function GenreGroup({ genre, movies }) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ── Main Library page ─────────────────────────────────────────────────────────
 export default function Library() {
-  const { userId } = useStore()
-  const navigate = useNavigate()
+  const { userId } = useStore();
+  const navigate = useNavigate();
 
-  const [library, setLibrary] = useState({ liked: [], to_watch: [], watched: [] })
-  const [loading, setLoading] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [activeMovie, setActiveMovie] = useState(null) // movie being dragged (for overlay)
+  const [library, setLibrary] = useState({ liked: [], to_watch: [], watched: [] });
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [activeMovie, setActiveMovie] = useState(null); // movie being dragged (for overlay)
 
   const fetchLibrary = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const data = await getLibrary(userId)
-      setLibrary(data)
+      const data = await getLibrary(userId);
+      setLibrary(data);
     } catch {
       // silently fail
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [userId])
+  }, [userId]);
 
   useEffect(() => {
-    fetchLibrary()
-  }, [fetchLibrary])
+    fetchLibrary();
+  }, [fetchLibrary]);
 
   // Group liked movies by primary genre
   const groupedLiked = library.liked.reduce((acc, movie) => {
-    const genre = movie.genres?.[0] || 'Autre'
-    if (!acc[genre]) acc[genre] = []
-    acc[genre].push(movie)
-    return acc
-  }, {})
+    const genre = movie.genres?.[0] || "Autre";
+    if (!acc[genre]) acc[genre] = [];
+    acc[genre].push(movie);
+    return acc;
+  }, {});
 
   const handleDragStart = (event) => {
-    const { data } = event.active
-    if (data.current?.source === 'sidebar') {
-      setActiveMovie(data.current.movie)
-    } else if (data.current?.source === 'column') {
-      setActiveMovie(data.current.entry?.movie || null)
+    const { data } = event.active;
+    if (data.current?.source === "sidebar") {
+      setActiveMovie(data.current.movie);
+    } else if (data.current?.source === "column") {
+      setActiveMovie(data.current.entry?.movie || null);
     }
-  }
+  };
 
   const handleDragEnd = async (event) => {
-    setActiveMovie(null)
-    const { active, over } = event
-    if (!over) return
+    setActiveMovie(null);
+    const { active, over } = event;
+    if (!over) return;
 
-    const targetColumn = over.id // 'to_watch' or 'watched'
-    const source = active.data.current?.source
+    const targetColumn = over.id; // 'to_watch' or 'watched'
+    const source = active.data.current?.source;
 
-    if (source === 'sidebar') {
+    if (source === "sidebar") {
       // Drag from liked sidebar → add to column
-      const movie = active.data.current.movie
+      const movie = active.data.current.movie;
       // Check not already in list
       const alreadyIn = [...library.to_watch, ...library.watched].find(
         (e) => e.movie_id === movie.id
-      )
+      );
       if (alreadyIn) {
-        if (alreadyIn.list_type === targetColumn) return
+        if (alreadyIn.list_type === targetColumn) return;
         // Move between columns
         try {
-          const updated = await updateLibraryEntry(userId, alreadyIn.id, { list_type: targetColumn })
+          const updated = await updateLibraryEntry(userId, alreadyIn.id, {
+            list_type: targetColumn,
+          });
           setLibrary((prev) => ({
             ...prev,
             to_watch: prev.to_watch.filter((e) => e.id !== alreadyIn.id),
             watched: prev.watched.filter((e) => e.id !== alreadyIn.id),
             [targetColumn]: [...prev[targetColumn], updated],
-          }))
-        } catch { /* ignore */ }
-        return
+          }));
+        } catch {
+          /* ignore */
+        }
+        return;
       }
       try {
-        const entry = await addLibraryEntry(userId, { movie_id: movie.id, list_type: targetColumn })
+        const entry = await addLibraryEntry(userId, {
+          movie_id: movie.id,
+          list_type: targetColumn,
+        });
         setLibrary((prev) => ({
           ...prev,
           [targetColumn]: [...prev[targetColumn], entry],
-        }))
-      } catch { /* ignore */ }
-    } else if (source === 'column') {
+        }));
+      } catch {
+        /* ignore */
+      }
+    } else if (source === "column") {
       // Drag between columns
-      const entry = active.data.current.entry
-      if (entry.list_type === targetColumn) return
+      const entry = active.data.current.entry;
+      if (entry.list_type === targetColumn) return;
       try {
-        const updated = await updateLibraryEntry(userId, entry.id, { list_type: targetColumn })
+        const updated = await updateLibraryEntry(userId, entry.id, { list_type: targetColumn });
         setLibrary((prev) => ({
           ...prev,
           to_watch: prev.to_watch.filter((e) => e.id !== entry.id),
           watched: prev.watched.filter((e) => e.id !== entry.id),
           [targetColumn]: [...prev[targetColumn], updated],
-        }))
-      } catch { /* ignore */ }
+        }));
+      } catch {
+        /* ignore */
+      }
     }
-  }
+  };
 
   const handleDelete = async (entryId) => {
     try {
-      await deleteLibraryEntry(userId, entryId)
+      await deleteLibraryEntry(userId, entryId);
       setLibrary((prev) => ({
         ...prev,
         to_watch: prev.to_watch.filter((e) => e.id !== entryId),
         watched: prev.watched.filter((e) => e.id !== entryId),
-      }))
-    } catch { /* ignore */ }
-  }
+      }));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const handleRate = async (entryId, rating) => {
     try {
-      const updated = await updateLibraryEntry(userId, entryId, { rating })
+      const updated = await updateLibraryEntry(userId, entryId, { rating });
       setLibrary((prev) => ({
         ...prev,
         watched: prev.watched.map((e) => (e.id === entryId ? updated : e)),
-      }))
-    } catch { /* ignore */ }
-  }
+      }));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const handleAdd = async (body) => {
-    const entry = await addLibraryEntry(userId, body)
+    const entry = await addLibraryEntry(userId, body);
     setLibrary((prev) => ({
       ...prev,
       [body.list_type]: [...prev[body.list_type], entry],
-    }))
-  }
+    }));
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
         <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
-    )
+    );
   }
 
   return (
@@ -208,7 +217,7 @@ export default function Library() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/feed')}
+            onClick={() => navigate("/feed")}
             className="text-slate-400 hover:text-white transition-colors text-sm"
           >
             ← Feed
@@ -232,7 +241,7 @@ export default function Library() {
             <div className="px-4 pt-4 pb-2 border-b border-white/5">
               <h2 className="text-white font-semibold text-sm">Films aimés</h2>
               <p className="text-slate-500 text-xs mt-0.5">
-                {library.liked.length} film{library.liked.length !== 1 ? 's' : ''}
+                {library.liked.length} film{library.liked.length !== 1 ? "s" : ""}
               </p>
             </div>
             <div className="flex-1 overflow-y-auto p-3">
@@ -289,12 +298,7 @@ export default function Library() {
       </DndContext>
 
       {/* Add Movie Modal */}
-      {showAddModal && (
-        <AddMovieModal
-          onClose={() => setShowAddModal(false)}
-          onAdd={handleAdd}
-        />
-      )}
+      {showAddModal && <AddMovieModal onClose={() => setShowAddModal(false)} onAdd={handleAdd} />}
     </div>
-  )
+  );
 }

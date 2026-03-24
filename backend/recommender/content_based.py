@@ -5,9 +5,9 @@ Maintains an in-memory FAISS index over movie feature vectors.
 
 import json
 import math
-import numpy as np
+
 import faiss
-from typing import Optional
+import numpy as np
 
 VECTOR_DIM = 20
 
@@ -38,7 +38,7 @@ DIMENSION_LABELS = [
 
 class ContentBasedEngine:
     def __init__(self):
-        self.index: Optional[faiss.Index] = None
+        self.index: faiss.Index | None = None
         self.movie_ids: list[int] = []  # maps FAISS index → movie DB id
 
     def build_index(self, movies: list[dict]) -> None:
@@ -83,7 +83,7 @@ class ContentBasedEngine:
         scores, indices = self.index.search(tv, k_actual)
 
         results = []
-        for score, idx in zip(scores[0], indices[0]):
+        for score, idx in zip(scores[0], indices[0], strict=False):
             if idx == -1:
                 continue
             results.append((self.movie_ids[idx], float(score)))

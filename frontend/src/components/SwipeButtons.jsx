@@ -1,6 +1,6 @@
-import React from 'react'
-import { motion } from 'framer-motion'
-import { X, Heart, HelpCircle } from 'lucide-react'
+import React from "react";
+import { motion } from "framer-motion";
+import { X, Heart, HelpCircle } from "lucide-react";
 
 export default function SwipeButtons({ onLike, onDislike, onWhyThis, disabled }) {
   return (
@@ -42,5 +42,5 @@ export default function SwipeButtons({ onLike, onDislike, onWhyThis, disabled })
         <Heart size={26} className="text-green-400" />
       </motion.button>
     </div>
-  )
+  );
 }
