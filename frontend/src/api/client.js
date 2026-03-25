@@ -2,9 +2,9 @@ import axios from "axios";
 
 const getApiBase = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  const { hostname, protocol } = window.location;
+  const { hostname, origin } = window.location;
   if (hostname === "localhost" || hostname === "127.0.0.1") return "http://localhost:8000";
-  return `${protocol}//api.${hostname}`;
+  return `${origin}/api`;
 };
 
 const API_BASE = getApiBase();
