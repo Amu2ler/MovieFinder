@@ -28,6 +28,9 @@ deploy:
   script:
     - tr -d '\r' < "$PRIVATE_KEY" > /tmp/deploy_key
     - chmod 600 /tmp/deploy_key
+    - echo "=== DEBUG ==="
+    - head -1 /tmp/deploy_key
+    - wc -l /tmp/deploy_key
     - ssh-add /tmp/deploy_key
     - scp -pr -o StrictHostKeyChecking=no frontend/dist/* root@$SERVER:$REMOTE_PATH/
     - |
