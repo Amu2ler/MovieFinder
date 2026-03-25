@@ -188,3 +188,4 @@ Fichier SQLite auto-créé à `backend/moviefinder.db` au premier lancement.
 - [ ] Authentification utilisateur (comptes persistants)
 - [ ] Enrichissement du catalogue (> 55 films)
 - [ ] Export de liste (Letterboxd, CSV)
+
