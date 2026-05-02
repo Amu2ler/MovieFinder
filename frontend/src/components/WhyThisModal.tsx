@@ -1,8 +1,13 @@
-import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Film, X } from "lucide-react";
+import type { WhyThisResponse } from "../api/types";
 
-export default function WhyThisModal({ data, onClose }) {
+interface WhyThisModalProps {
+  data: WhyThisResponse | null;
+  onClose: () => void;
+}
+
+export default function WhyThisModal({ data, onClose }: WhyThisModalProps) {
   if (!data) return null;
 
   return (
@@ -13,10 +18,8 @@ export default function WhyThisModal({ data, onClose }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        {/* Backdrop */}
         <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
 
-        {/* Modal */}
         <motion.div
           className="relative bg-[#0e0e1c] border border-white/8 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
           initial={{ y: 60, opacity: 0 }}

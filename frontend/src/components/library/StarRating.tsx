@@ -1,6 +1,10 @@
-import React from "react";
+interface StarRatingProps {
+  value?: number;
+  onChange?: (n: number) => void;
+  readonly?: boolean;
+}
 
-export default function StarRating({ value = 0, onChange, readonly = false }) {
+export default function StarRating({ value = 0, onChange, readonly = false }: StarRatingProps) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 10 }, (_, i) => i + 1).map((star) => (

@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import useStore from "../store/useStore";
 import { addHate } from "../api/client";
+import type { HateType } from "../api/types";
 
 const PLATFORMS = ["Netflix", "Prime Video", "Disney+", "HBO Max", "Mubi", "Peacock", "Paramount+"];
 
-export default function FilterPanel({ onClose }) {
+interface FilterPanelProps {
+  onClose: () => void;
+}
+
+export default function FilterPanel({ onClose }: FilterPanelProps) {
   const {
-    userId,
     platformFilter,
     setPlatformFilter,
     bannedDirectors,
@@ -18,10 +22,10 @@ export default function FilterPanel({ onClose }) {
   } = useStore();
 
   const [hateInput, setHateInput] = useState("");
-  const [hateType, setHateType] = useState("director");
+  const [hateType, setHateType] = useState<HateType>("director");
   const [hateError, setHateError] = useState("");
 
-  const togglePlatform = (platform) => {
+  const togglePlatform = (platform: string) => {
     if (platformFilter.includes(platform)) {
       setPlatformFilter(platformFilter.filter((p) => p !== platform));
     } else {
@@ -34,7 +38,7 @@ export default function FilterPanel({ onClose }) {
     if (!name) return;
     setHateError("");
     try {
-      await addHate(userId, hateType, name);
+      await addHate(hateType, name);
       if (hateType === "director") addBannedDirector(name);
       else addBannedActor(name);
       setHateInput("");
@@ -67,7 +71,6 @@ export default function FilterPanel({ onClose }) {
             </button>
           </div>
 
-          {/* Platform filter */}
           <section className="mb-8">
             <h3 className="text-slate-500 text-xs uppercase tracking-widest mb-3">
               Plateformes de streaming
@@ -97,7 +100,6 @@ export default function FilterPanel({ onClose }) {
             )}
           </section>
 
-          {/* Hate mode */}
           <section>
             <h3 className="text-slate-500 text-xs uppercase tracking-widest mb-3">
               Bannir définitivement

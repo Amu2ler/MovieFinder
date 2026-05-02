@@ -3,18 +3,15 @@
 import pytest
 
 
-async def _setup(client):
-    user_id = (await client.post("/users")).json()["id"]
+async def _first_movie_id(client):
     movies = (await client.get("/movies/onboarding")).json()
-    movie_id = movies[0]["id"]
-    return user_id, movie_id
+    return movies[0]["id"]
 
 
 @pytest.mark.asyncio
-async def test_get_empty_library(client):
-    user_id = (await client.post("/users")).json()["id"]
-
-    resp = await client.get(f"/library/{user_id}")
+async def test_get_empty_library(auth_client):
+    client, _ = auth_client
+    resp = await client.get("/library")
     assert resp.status_code == 200
     data = resp.json()
     assert data["liked"] == []
@@ -23,11 +20,18 @@ async def test_get_empty_library(client):
 
 
 @pytest.mark.asyncio
-async def test_add_to_watch(client):
-    user_id, movie_id = await _setup(client)
+async def test_library_requires_auth(client):
+    resp = await client.get("/library")
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_add_to_watch(auth_client):
+    client, _ = auth_client
+    movie_id = await _first_movie_id(client)
 
     resp = await client.post(
-        f"/library/{user_id}/entries",
+        "/library/entries",
         json={"movie_id": movie_id, "list_type": "to_watch"},
     )
     assert resp.status_code == 201
@@ -37,11 +41,12 @@ async def test_add_to_watch(client):
 
 
 @pytest.mark.asyncio
-async def test_add_watched_with_rating(client):
-    user_id, movie_id = await _setup(client)
+async def test_add_watched_with_rating(auth_client):
+    client, _ = auth_client
+    movie_id = await _first_movie_id(client)
 
     resp = await client.post(
-        f"/library/{user_id}/entries",
+        "/library/entries",
         json={"movie_id": movie_id, "list_type": "watched", "rating": 8},
     )
     assert resp.status_code == 201
@@ -51,11 +56,10 @@ async def test_add_watched_with_rating(client):
 
 
 @pytest.mark.asyncio
-async def test_add_custom_entry(client):
-    user_id = (await client.post("/users")).json()["id"]
-
+async def test_add_custom_entry(auth_client):
+    client, _ = auth_client
     resp = await client.post(
-        f"/library/{user_id}/entries",
+        "/library/entries",
         json={"custom_title": "Mon Film Perso", "list_type": "to_watch"},
     )
     assert resp.status_code == 201
@@ -63,18 +67,29 @@ async def test_add_custom_entry(client):
 
 
 @pytest.mark.asyncio
-async def test_update_entry(client):
-    user_id, movie_id = await _setup(client)
+async def test_add_invalid_rating_rejected(auth_client):
+    client, _ = auth_client
+    movie_id = await _first_movie_id(client)
+    resp = await client.post(
+        "/library/entries",
+        json={"movie_id": movie_id, "list_type": "watched", "rating": 99},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_update_entry(auth_client):
+    client, _ = auth_client
+    movie_id = await _first_movie_id(client)
 
     post_resp = await client.post(
-        f"/library/{user_id}/entries",
+        "/library/entries",
         json={"movie_id": movie_id, "list_type": "to_watch"},
     )
-    assert post_resp.status_code == 201
     entry_id = post_resp.json()["id"]
 
     resp = await client.patch(
-        f"/library/{user_id}/entries/{entry_id}",
+        f"/library/entries/{entry_id}",
         json={"list_type": "watched", "rating": 9},
     )
     assert resp.status_code == 200
@@ -84,18 +99,45 @@ async def test_update_entry(client):
 
 
 @pytest.mark.asyncio
-async def test_delete_entry(client):
-    user_id, movie_id = await _setup(client)
+async def test_delete_entry(auth_client):
+    client, _ = auth_client
+    movie_id = await _first_movie_id(client)
 
     post_resp = await client.post(
-        f"/library/{user_id}/entries",
+        "/library/entries",
         json={"movie_id": movie_id, "list_type": "to_watch"},
     )
-    assert post_resp.status_code == 201
     entry_id = post_resp.json()["id"]
 
-    del_resp = await client.delete(f"/library/{user_id}/entries/{entry_id}")
+    del_resp = await client.delete(f"/library/entries/{entry_id}")
     assert del_resp.status_code == 204
 
-    library = (await client.get(f"/library/{user_id}")).json()
+    library = (await client.get("/library")).json()
     assert all(e["id"] != entry_id for e in library["to_watch"])
+
+
+@pytest.mark.asyncio
+async def test_cannot_access_other_users_entry(client):
+    """User A creates an entry; user B must NOT be able to delete or update it."""
+    # User A
+    user_a_token = (await client.post("/users")).json()["session_token"]
+    movies = (await client.get("/movies/onboarding")).json()
+    movie_id = movies[0]["id"]
+    client.headers["Authorization"] = f"Bearer {user_a_token}"
+    entry_id = (
+        await client.post(
+            "/library/entries",
+            json={"movie_id": movie_id, "list_type": "to_watch"},
+        )
+    ).json()["id"]
+
+    # User B
+    user_b_token = (await client.post("/users")).json()["session_token"]
+    client.headers["Authorization"] = f"Bearer {user_b_token}"
+
+    resp = await client.delete(f"/library/entries/{entry_id}")
+    assert resp.status_code == 404  # not visible to user B
+    resp = await client.patch(f"/library/entries/{entry_id}", json={"list_type": "watched"})
+    assert resp.status_code == 404
+
+    client.headers.pop("Authorization", None)

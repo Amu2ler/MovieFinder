@@ -17,9 +17,14 @@ def _parse_movie(row) -> dict:
     return d
 
 
+def _escape_like(value: str) -> str:
+    """Escape SQLite LIKE wildcards so user input can't act as a wildcard."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 @router.get("/onboarding", response_model=list[MovieResponse])
 async def get_onboarding_movies(db=Depends(get_db)):
-    """Return the 10 iconic films used during onboarding calibration."""
+    """Return the iconic films used during onboarding calibration."""
     async with db.execute(
         "SELECT * FROM movies WHERE is_onboarding = 1 ORDER BY avg_rating DESC LIMIT 10"
     ) as cursor:
@@ -29,13 +34,13 @@ async def get_onboarding_movies(db=Depends(get_db)):
 
 @router.get("/search", response_model=list[MovieResponse])
 async def search_movies(
-    q: str = Query(..., min_length=1),
+    q: str = Query(..., min_length=1, max_length=100),
     db=Depends(get_db),
 ):
-    """Simple title/director search."""
-    pattern = f"%{q}%"
+    """Simple title/director search (LIKE-wildcards in q are escaped)."""
+    pattern = f"%{_escape_like(q)}%"
     async with db.execute(
-        "SELECT * FROM movies WHERE title LIKE ? OR director LIKE ? LIMIT 20",
+        "SELECT * FROM movies WHERE title LIKE ? ESCAPE '\\' OR director LIKE ? ESCAPE '\\' LIMIT 20",
         (pattern, pattern),
     ) as cursor:
         rows = await cursor.fetchall()

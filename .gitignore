@@ -11,7 +11,10 @@ build/
 venv/
 env/
 *.db
+*.db-wal
+*.db-shm
 *.sqlite3
+data/
 
 # Node
 node_modules/
@@ -24,11 +27,16 @@ dist/
 .env.*
 !.env.example
 
-# IDE
+# IDE / tooling
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
+
+# TypeScript build cache
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # OS
 .DS_Store

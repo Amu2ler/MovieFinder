@@ -3,58 +3,64 @@
 import pytest
 
 
-async def _setup(client):
-    user_id = (await client.post("/users")).json()["id"]
+async def _first_movie_id(client):
     movies = (await client.get("/movies/onboarding")).json()
-    movie_id = movies[0]["id"]
-    return user_id, movie_id
+    return movies[0]["id"]
 
 
 @pytest.mark.asyncio
-async def test_like_movie(client):
-    user_id, movie_id = await _setup(client)
+async def test_like_movie(auth_client):
+    client, _ = auth_client
+    movie_id = await _first_movie_id(client)
 
     resp = await client.post(
         "/interactions",
-        json={"user_id": user_id, "movie_id": movie_id, "action": "like"},
+        json={"movie_id": movie_id, "action": "like"},
     )
     assert resp.status_code == 201
-    data = resp.json()
-    assert data["action"] == "like"
-    # Taste vector should be updated (non-zero after a like)
-    assert any(v != 0 for v in data["new_taste_vector"])
+    assert resp.json()["action"] == "like"
 
 
 @pytest.mark.asyncio
-async def test_dislike_movie(client):
-    user_id, movie_id = await _setup(client)
+async def test_dislike_movie(auth_client):
+    client, _ = auth_client
+    movie_id = await _first_movie_id(client)
 
     resp = await client.post(
         "/interactions",
-        json={"user_id": user_id, "movie_id": movie_id, "action": "dislike"},
+        json={"movie_id": movie_id, "action": "dislike"},
     )
     assert resp.status_code == 201
     assert resp.json()["action"] == "dislike"
 
 
 @pytest.mark.asyncio
-async def test_invalid_action(client):
-    user_id, movie_id = await _setup(client)
+async def test_invalid_action_rejected(auth_client):
+    client, _ = auth_client
+    movie_id = await _first_movie_id(client)
 
     resp = await client.post(
         "/interactions",
-        json={"user_id": user_id, "movie_id": movie_id, "action": "meh"},
+        json={"movie_id": movie_id, "action": "meh"},
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 422  # Pydantic Literal
 
 
 @pytest.mark.asyncio
-async def test_interaction_unknown_user(client):
-    movies = (await client.get("/movies/onboarding")).json()
-    movie_id = movies[0]["id"]
-
+async def test_interaction_without_token(client):
+    movie_id = await _first_movie_id(client)
     resp = await client.post(
         "/interactions",
-        json={"user_id": 99999, "movie_id": movie_id, "action": "like"},
+        json={"movie_id": movie_id, "action": "like"},
+    )
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_interaction_unknown_movie(auth_client):
+    client, _ = auth_client
+    resp = await client.post(
+        "/interactions",
+        json={"movie_id": 999999, "action": "like"},
     )
     assert resp.status_code == 404

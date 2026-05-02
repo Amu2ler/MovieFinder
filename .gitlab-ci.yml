@@ -1,20 +1,60 @@
 variables:
   SERVER: "168.231.87.230"
   REMOTE_PATH: "/var/www/moviefinder"
+  # Path on the server where the SQLite DB lives. Kept OUT of the deploy target
+  # so a backend rsync never touches user data.
+  REMOTE_DATA_PATH: "/var/lib/moviefinder"
+  DEPLOY_USER: "deploy"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 stages:
+  - test
   - build
   - deploy
 
-before_script:
-  - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
-  - mkdir -p ~/.ssh
-  - eval $(ssh-agent -s)
-  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+# ──────────────────────────────────────────────────────────────────────────────
+# Tests — run on every push & MR. Build & deploy are blocked behind these.
+# ──────────────────────────────────────────────────────────────────────────────
+
+test:backend:
+  stage: test
+  image: python:3.11
+  cache:
+    key: pip-$CI_COMMIT_REF_SLUG
+    paths:
+      - .cache/pip
+  script:
+    - cd backend
+    - pip install --upgrade pip
+    - pip install -r requirements-dev.txt
+    - ruff check .
+    - pytest -q
+
+test:frontend:
+  stage: test
+  image: node:20
+  cache:
+    key: npm-$CI_COMMIT_REF_SLUG
+    paths:
+      - frontend/node_modules
+  script:
+    - cd frontend
+    - npm ci --legacy-peer-deps
+    - npm run lint:check
+    - npm run typecheck
+    - npm test
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Build — only runs once tests are green (implicit via stage order)
+# ──────────────────────────────────────────────────────────────────────────────
 
 build:
   stage: build
   image: node:20
+  cache:
+    key: npm-$CI_COMMIT_REF_SLUG
+    paths:
+      - frontend/node_modules
   script:
     - cd frontend
     - npm ci --legacy-peer-deps
@@ -22,19 +62,43 @@ build:
   artifacts:
     paths:
       - frontend/dist
+    expire_in: 1 week
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Deploy — master only, depends on the build artifact
+# ──────────────────────────────────────────────────────────────────────────────
 
 deploy:
   stage: deploy
+  needs:
+    - job: build
+      artifacts: true
+    - test:backend
+    - test:frontend
+  before_script:
+    - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client rsync -y )"
+    - mkdir -p ~/.ssh
+    - eval $(ssh-agent -s)
+    # Pin the host key fingerprint instead of disabling host checking
+    - if [ -n "$SERVER_HOST_KEY" ]; then echo "$SERVER_HOST_KEY" >> ~/.ssh/known_hosts; fi
+    - chmod 644 ~/.ssh/known_hosts
   script:
     - tr -d '\r' < "$PRIVATE_KEY" > /tmp/deploy_key
     - echo "" >> /tmp/deploy_key
     - chmod 600 /tmp/deploy_key
     - ssh-add /tmp/deploy_key
-    - scp -pr -o StrictHostKeyChecking=no frontend/dist/* root@$SERVER:$REMOTE_PATH/
+    # Frontend (static) — atomic-ish replace
+    - rsync -az --delete frontend/dist/ "$DEPLOY_USER@$SERVER:$REMOTE_PATH/"
     - |
       if git diff --name-only HEAD~1 HEAD | grep -q "^backend/"; then
-        scp -pr -o StrictHostKeyChecking=no backend/* root@$SERVER:$REMOTE_PATH/backend/
-        ssh -o StrictHostKeyChecking=no root@$SERVER "systemctl restart moviefinder"
+        # Backend code only — never touch *.db, *.sqlite*, .env
+        rsync -az --delete \
+          --exclude='*.db' --exclude='*.db-wal' --exclude='*.db-shm' \
+          --exclude='*.sqlite*' \
+          --exclude='.env' --exclude='__pycache__' --exclude='.pytest_cache' \
+          --exclude='tests' --exclude='requirements-dev.txt' \
+          backend/ "$DEPLOY_USER@$SERVER:$REMOTE_PATH/backend/"
+        ssh "$DEPLOY_USER@$SERVER" "sudo systemctl restart moviefinder"
         echo "Backend déployé et redémarré."
       else
         echo "Pas de modif backend, skip."

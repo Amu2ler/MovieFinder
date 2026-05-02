@@ -1,19 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { searchMovies } from "../../api/client";
 import StarRating from "./StarRating";
+import type { LibraryEntryCreate, ListType, Movie } from "../../api/types";
 
-export default function AddMovieModal({ onClose, onAdd }) {
+interface AddMovieModalProps {
+  onClose: () => void;
+  onAdd: (body: LibraryEntryCreate) => Promise<void> | void;
+}
+
+export default function AddMovieModal({ onClose, onAdd }: AddMovieModalProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [listType, setListType] = useState("to_watch");
+  const [results, setResults] = useState<Movie[]>([]);
+  const [selected, setSelected] = useState<Movie | null>(null);
+  const [listType, setListType] = useState<ListType>("to_watch");
   const [rating, setRating] = useState(0);
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const inputRef = useRef(null);
-  const debounceRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -24,7 +30,7 @@ export default function AddMovieModal({ onClose, onAdd }) {
       setResults([]);
       return;
     }
-    clearTimeout(debounceRef.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
@@ -36,7 +42,9 @@ export default function AddMovieModal({ onClose, onAdd }) {
         setSearching(false);
       }
     }, 300);
-    return () => clearTimeout(debounceRef.current);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query]);
 
   const handleSubmit = async () => {
@@ -73,7 +81,6 @@ export default function AddMovieModal({ onClose, onAdd }) {
           exit={{ y: 60, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
-          {/* Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-white font-semibold tracking-tight">Ajouter un film</h2>
             <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
@@ -81,7 +88,6 @@ export default function AddMovieModal({ onClose, onAdd }) {
             </button>
           </div>
 
-          {/* Search */}
           <div className="relative">
             <input
               ref={inputRef}
@@ -101,7 +107,6 @@ export default function AddMovieModal({ onClose, onAdd }) {
             )}
           </div>
 
-          {/* Results */}
           {results.length > 0 && !selected && (
             <div className="flex flex-col gap-0.5 max-h-52 overflow-y-auto rounded-xl bg-[#080810] border border-white/8 p-1">
               {results.map((movie) => (
@@ -148,14 +153,13 @@ export default function AddMovieModal({ onClose, onAdd }) {
             </div>
           )}
 
-          {/* List type */}
           <div>
             <p className="text-slate-500 text-xs mb-2 uppercase tracking-wider">Ajouter à</p>
             <div className="flex gap-2">
-              {[
+              {([
                 { value: "to_watch", label: "À voir" },
                 { value: "watched", label: "Déjà vu" },
-              ].map(({ value, label }) => (
+              ] as const).map(({ value, label }) => (
                 <button
                   key={value}
                   onClick={() => setListType(value)}
@@ -171,7 +175,6 @@ export default function AddMovieModal({ onClose, onAdd }) {
             </div>
           </div>
 
-          {/* Rating (only for watched) */}
           {listType === "watched" && (
             <div>
               <p className="text-slate-500 text-xs mb-2 uppercase tracking-wider">
@@ -182,7 +185,6 @@ export default function AddMovieModal({ onClose, onAdd }) {
             </div>
           )}
 
-          {/* Submit */}
           <button
             onClick={handleSubmit}
             disabled={

@@ -1,11 +1,16 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { X, Heart, HelpCircle } from "lucide-react";
 
-export default function SwipeButtons({ onLike, onDislike, onWhyThis, disabled }) {
+interface SwipeButtonsProps {
+  onLike: () => void;
+  onDislike: () => void;
+  onWhyThis: () => void;
+  disabled?: boolean;
+}
+
+export default function SwipeButtons({ onLike, onDislike, onWhyThis, disabled }: SwipeButtonsProps) {
   return (
     <div className="flex items-center justify-center gap-8 mt-6">
-      {/* Dislike */}
       <motion.button
         whileTap={{ scale: 0.88 }}
         whileHover={{ scale: 1.08 }}
@@ -17,7 +22,6 @@ export default function SwipeButtons({ onLike, onDislike, onWhyThis, disabled })
         <X size={26} className="text-red-400" />
       </motion.button>
 
-      {/* Why this? */}
       <motion.button
         whileTap={{ scale: 0.88 }}
         whileHover={{ scale: 1.08 }}
@@ -30,7 +34,6 @@ export default function SwipeButtons({ onLike, onDislike, onWhyThis, disabled })
         <HelpCircle size={18} className="text-slate-400" />
       </motion.button>
 
-      {/* Like */}
       <motion.button
         whileTap={{ scale: 0.88 }}
         whileHover={{ scale: 1.08 }}

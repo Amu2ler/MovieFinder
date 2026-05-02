@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import Joyride, { STATUS } from "react-joyride";
+import { useEffect, useState } from "react";
+import Joyride, { STATUS, type CallBackProps, type Step } from "react-joyride";
 import useStore from "../store/useStore";
 
-const STEPS = [
+const STEPS: Step[] = [
   {
     target: "#tour-header",
     title: "Bienvenue sur MovieFinder 🎬",
@@ -97,13 +97,17 @@ const joyrideStyles = {
   },
 };
 
-export default function AppTour({ run, onFinish }) {
+interface AppTourProps {
+  run?: boolean;
+  onFinish?: () => void;
+}
+
+export default function AppTour({ run, onFinish }: AppTourProps) {
   const { tourCompleted, setTourCompleted } = useStore();
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
     if (!tourCompleted) {
-      // small delay so DOM elements are mounted
       const t = setTimeout(() => setStarted(true), 600);
       return () => clearTimeout(t);
     }
@@ -111,9 +115,9 @@ export default function AppTour({ run, onFinish }) {
 
   const active = run !== undefined ? run : started;
 
-  const handleCallback = (data) => {
+  const handleCallback = (data: CallBackProps): void => {
     const { status } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setTourCompleted();
       setStarted(false);
       onFinish?.();

@@ -1,25 +1,31 @@
+from typing import Literal
 
-from pydantic import BaseModel
-
-
-class UserCreate(BaseModel):
-    pass
+from pydantic import BaseModel, Field
 
 
-class UserResponse(BaseModel):
+# ── Users ─────────────────────────────────────────────────────────────────────
+class UserPublic(BaseModel):
+    """User data returned to authenticated clients (NO session_token)."""
+
     id: int
-    session_token: str
     taste_vector: list[float]
     banned_directors: list[str]
     banned_actors: list[str]
     created_at: str
 
 
+class UserCreateResponse(UserPublic):
+    """Returned ONCE at user creation — includes the session token."""
+
+    session_token: str
+
+
 class HateRequest(BaseModel):
-    type: str  # "director" or "actor"
-    name: str
+    type: Literal["director", "actor"]
+    name: str = Field(min_length=1, max_length=200)
 
 
+# ── Movies ────────────────────────────────────────────────────────────────────
 class MovieResponse(BaseModel):
     id: int
     tmdb_id: int | None
@@ -36,21 +42,21 @@ class MovieResponse(BaseModel):
     is_onboarding: bool
 
 
+# ── Interactions ──────────────────────────────────────────────────────────────
 class InteractionCreate(BaseModel):
-    user_id: int
-    movie_id: int
-    action: str  # "like" or "dislike"
+    movie_id: int = Field(ge=1)
+    action: Literal["like", "dislike"]
 
 
 class InteractionResponse(BaseModel):
     id: int
     user_id: int
     movie_id: int
-    action: str
+    action: Literal["like", "dislike"]
     timestamp: str
-    new_taste_vector: list[float]
 
 
+# ── Recommendations ───────────────────────────────────────────────────────────
 class RecommendationItem(BaseModel):
     movie: MovieResponse
     score: float
@@ -62,17 +68,18 @@ class WhyThisResponse(BaseModel):
     reasons: list[str]
 
 
+# ── Library ───────────────────────────────────────────────────────────────────
 class LibraryEntryCreate(BaseModel):
-    movie_id: int | None = None
-    custom_title: str | None = None
-    list_type: str  # "to_watch" or "watched"
-    rating: int | None = None  # 1-10, only for watched
+    movie_id: int | None = Field(default=None, ge=1)
+    custom_title: str | None = Field(default=None, min_length=1, max_length=200)
+    list_type: Literal["to_watch", "watched"]
+    rating: int | None = Field(default=None, ge=1, le=10)
 
 
 class LibraryEntryUpdate(BaseModel):
-    list_type: str | None = None
-    rating: int | None = None
-    position: int | None = None
+    list_type: Literal["to_watch", "watched"] | None = None
+    rating: int | None = Field(default=None, ge=1, le=10)
+    position: int | None = Field(default=None, ge=0)
 
 
 class LibraryEntryResponse(BaseModel):

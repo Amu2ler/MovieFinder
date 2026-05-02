@@ -1,32 +1,23 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Heart } from "lucide-react";
 import { getOnboardingMovies, sendInteraction } from "../api/client";
 import useStore from "../store/useStore";
-
-const POSTER_PLACEHOLDER = (title) => {
-  const initials = title
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join("");
-  const safeTitle = title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#12121e"/><text x="50%" y="45%" font-family="sans-serif" font-size="80" font-weight="bold" fill="#c49a2e" text-anchor="middle" dominant-baseline="middle">${initials}</text><text x="50%" y="62%" font-family="sans-serif" font-size="18" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">${safeTitle}</text></svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-};
+import { notifyError } from "../lib/notify";
+import { posterPlaceholder } from "../lib/posterPlaceholder";
+import type { InteractionAction, Movie } from "../api/types";
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { userId, setOnboardingComplete } = useStore();
+  const { setOnboardingComplete } = useStore();
 
-  const [movies, setMovies] = useState([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [sending, setSending] = useState(false);
-  const [direction, setDirection] = useState(null);
+  const [direction, setDirection] = useState<InteractionAction | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getOnboardingMovies()
@@ -39,15 +30,15 @@ export default function Onboarding() {
   const movie = movies[currentIdx];
   const progress = total > 0 ? (currentIdx / total) * 100 : 0;
 
-  const handleAction = async (action) => {
+  const handleAction = async (action: InteractionAction) => {
     if (sending || !movie) return;
     setSending(true);
     setDirection(action);
 
     try {
-      await sendInteraction(userId, movie.id, action);
+      await sendInteraction(movie.id, action);
     } catch {
-      // non-blocking
+      notifyError("Vote non enregistré (réseau).");
     }
 
     await new Promise((r) => setTimeout(r, 400));
@@ -86,7 +77,6 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 pt-8 pb-6 bg-[#080810]">
-      {/* Header */}
       <div className="w-full max-w-md mb-6">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -99,7 +89,6 @@ export default function Onboarding() {
             {currentIdx + 1} / {total}
           </span>
         </div>
-        {/* Progress bar */}
         <div className="w-full h-0.5 bg-white/8 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-brand-500 rounded-full"
@@ -110,7 +99,6 @@ export default function Onboarding() {
         </div>
       </div>
 
-      {/* Card */}
       <div className="w-full max-w-md relative" style={{ height: 580 }}>
         <AnimatePresence mode="wait">
           {movie && (
@@ -140,15 +128,15 @@ export default function Onboarding() {
                   }
                 `}
               >
-                {/* Poster */}
                 <div className="relative flex-1 min-h-0 overflow-hidden">
                   <img
-                    src={movie.poster_url || POSTER_PLACEHOLDER(movie.title)}
+                    src={movie.poster_url || posterPlaceholder(movie.title)}
                     alt={movie.title}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = POSTER_PLACEHOLDER(movie.title);
+                      const img = e.currentTarget;
+                      img.onerror = null;
+                      img.src = posterPlaceholder(movie.title);
                     }}
                   />
                   {direction === "like" && (
@@ -164,7 +152,6 @@ export default function Onboarding() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#12121e] via-[#12121e]/40 to-transparent" />
                 </div>
 
-                {/* Info */}
                 <div className="px-5 pb-4 pt-3">
                   <h2 className="text-xl font-bold text-white tracking-tight">{movie.title}</h2>
                   <p className="text-slate-400 text-sm mt-0.5 mb-2">
@@ -181,7 +168,6 @@ export default function Onboarding() {
         </AnimatePresence>
       </div>
 
-      {/* Buttons */}
       <div className="flex items-center gap-8 mt-6">
         <motion.button
           whileTap={{ scale: 0.88 }}

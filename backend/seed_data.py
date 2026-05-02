@@ -14,13 +14,14 @@ Feature vector dimensions (20 total):
 import asyncio
 import json
 import math
-from pathlib import Path
 
 import aiosqlite
 
+import database
 from database import create_tables
 
-DB_PATH = Path(__file__).parent / "moviefinder.db"
+# Re-exported so old call sites still work, but it tracks database.DB_PATH
+DB_PATH = database.DB_PATH
 
 # fmt: off
 MOVIES = [
@@ -1305,7 +1306,7 @@ def normalize(v: list) -> list:
 
 async def seed():
     await create_tables()
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with aiosqlite.connect(database.DB_PATH) as db:
         # Check if already seeded
         cursor = await db.execute("SELECT COUNT(*) FROM movies")
         count = (await cursor.fetchone())[0]

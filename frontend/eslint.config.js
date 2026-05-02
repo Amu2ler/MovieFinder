@@ -1,11 +1,13 @@
 import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ["src/**/*.{js,jsx}"],
+    files: ["src/**/*.{ts,tsx}"],
     plugins: {
       react: reactPlugin,
       "react-hooks": reactHooks,
@@ -22,7 +24,6 @@ export default [
         setInterval: "readonly",
         clearInterval: "readonly",
         fetch: "readonly",
-        alert: "readonly",
         navigator: "readonly",
         localStorage: "readonly",
         sessionStorage: "readonly",
@@ -30,24 +31,10 @@ export default [
         URLSearchParams: "readonly",
         FormData: "readonly",
         Promise: "readonly",
-        Map: "readonly",
-        Set: "readonly",
-        WeakMap: "readonly",
-        Symbol: "readonly",
-        Proxy: "readonly",
-        Reflect: "readonly",
-        JSON: "readonly",
-        Math: "readonly",
-        Date: "readonly",
-        Array: "readonly",
-        Object: "readonly",
-        String: "readonly",
-        Number: "readonly",
-        Boolean: "readonly",
-        Error: "readonly",
-        RegExp: "readonly",
-        Int32Array: "readonly",
         process: "readonly",
+        HTMLInputElement: "readonly",
+        HTMLImageElement: "readonly",
+        Element: "readonly",
       },
       parserOptions: {
         ecmaFeatures: { jsx: true },
@@ -61,9 +48,13 @@ export default [
       ...reactHooks.configs.recommended.rules,
       "react/prop-types": "off",
       "react/react-in-jsx-scope": "off",
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-explicit-any": "warn",
       "no-empty": ["error", { allowEmptyCatch: true }],
       "no-console": "off",
     },
+  },
+  {
+    ignores: ["dist/**", "node_modules/**", "src/api/schema.d.ts"],
   },
 ];
