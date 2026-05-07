@@ -13,7 +13,7 @@ from database import create_tables
 from rate_limit import limiter
 from recommender.engine import build_faiss_index
 from routers import interactions, library, movies, recommendations, users
-from seed_data import seed
+from seed_data import seed, seed_from_tmdb
 
 load_dotenv()
 
@@ -22,6 +22,7 @@ load_dotenv()
 async def lifespan(app: FastAPI):
     await create_tables()
     await seed()
+    await seed_from_tmdb()  # no-op if TMDB_API_KEY unset or catalog already large
 
     async with aiosqlite.connect(database.DB_PATH) as db:
         db.row_factory = aiosqlite.Row

@@ -14,6 +14,7 @@ Feature vector dimensions (20 total):
 import asyncio
 import json
 import math
+import os
 
 import aiosqlite
 
@@ -1350,6 +1351,68 @@ async def seed():
             inserted += 1
         await db.commit()
         print(f"Seeded {inserted} movies into the database (total: {count + inserted}).")
+
+
+async def seed_from_tmdb() -> int:
+    """Fetch movies from TMDB and insert them (skip existing tmdb_ids).
+
+    Only runs when TMDB_API_KEY is set and the catalog has fewer than 200 movies.
+    Returns the number of newly inserted movies.
+    """
+    api_key = os.environ.get("TMDB_API_KEY")
+    if not api_key:
+        return 0
+
+    async with aiosqlite.connect(database.DB_PATH) as db:
+        cursor = await db.execute("SELECT COUNT(*) FROM movies")
+        count = (await cursor.fetchone())[0]
+        if count >= 200:
+            print(f"TMDB seed skipped — catalog already has {count} movies.")
+            return 0
+
+    from tmdb import fetch_movies  # local import avoids circular deps at module load
+
+    print(f"Fetching movies from TMDB (catalog has {count} films)…")
+    movies = await fetch_movies(api_key)
+    print(f"TMDB returned {len(movies)} candidates.")
+
+    inserted = 0
+    async with aiosqlite.connect(database.DB_PATH) as db:
+        cursor = await db.execute("SELECT tmdb_id FROM movies WHERE tmdb_id IS NOT NULL")
+        existing_tmdb_ids = {row[0] for row in await cursor.fetchall()}
+
+        for m in movies:
+            if m["tmdb_id"] in existing_tmdb_ids:
+                continue
+            await db.execute(
+                """INSERT INTO movies
+                   (tmdb_id, title, year, director, director_id, cast, genres,
+                    synopsis, poster_url, streaming_platforms, avg_rating,
+                    feature_vector, is_onboarding)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    m["tmdb_id"],
+                    m["title"],
+                    m["year"],
+                    m["director"],
+                    m["director_id"],
+                    json.dumps(m["cast"]),
+                    json.dumps(m["genres"]),
+                    m["synopsis"],
+                    m["poster_url"],
+                    json.dumps(m["streaming_platforms"]),
+                    m["avg_rating"],
+                    json.dumps(m["feature_vector"]),
+                    m["is_onboarding"],
+                ),
+            )
+            existing_tmdb_ids.add(m["tmdb_id"])
+            inserted += 1
+
+        await db.commit()
+
+    print(f"TMDB seed complete: {inserted} new movies added.")
+    return inserted
 
 
 if __name__ == "__main__":
