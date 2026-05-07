@@ -1363,12 +1363,15 @@ async def seed_from_tmdb() -> int:
     if not api_key:
         return 0
 
+    force_refresh = os.environ.get("TMDB_FORCE_REFRESH") == "1"
+
     async with aiosqlite.connect(database.DB_PATH) as db:
         cursor = await db.execute("SELECT COUNT(*) FROM movies")
         count = (await cursor.fetchone())[0]
-        if count >= 200:
-            print(f"TMDB seed skipped — catalog already has {count} movies.")
-            return 0
+
+    if count >= 200 and not force_refresh:
+        print(f"TMDB seed skipped — catalog already has {count} movies.")
+        return 0
 
     from tmdb import fetch_movies  # local import avoids circular deps at module load
 
@@ -1383,6 +1386,11 @@ async def seed_from_tmdb() -> int:
 
         for m in movies:
             if m["tmdb_id"] in existing_tmdb_ids:
+                # Always refresh poster URL from TMDB (hardcoded URLs can be stale)
+                await db.execute(
+                    "UPDATE movies SET poster_url = ? WHERE tmdb_id = ?",
+                    (m["poster_url"], m["tmdb_id"]),
+                )
                 continue
             await db.execute(
                 """INSERT INTO movies
