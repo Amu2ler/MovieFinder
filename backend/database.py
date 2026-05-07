@@ -31,6 +31,8 @@ async def create_tables():
         await db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE,
+                password_hash TEXT,
                 session_token TEXT UNIQUE NOT NULL,
                 taste_vector TEXT NOT NULL DEFAULT '[]',
                 banned_directors TEXT NOT NULL DEFAULT '[]',
@@ -38,6 +40,12 @@ async def create_tables():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # Migration for existing databases
+        for col_def in ("email TEXT UNIQUE", "password_hash TEXT"):
+            try:
+                await db.execute(f"ALTER TABLE users ADD COLUMN {col_def}")
+            except Exception:
+                pass
 
         await db.execute("""
             CREATE TABLE IF NOT EXISTS movies (

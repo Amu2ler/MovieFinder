@@ -34,6 +34,9 @@ interface StoreState {
   setTourCompleted: () => void;
   resetTour: () => void;
 
+  // ── Auth ──────────────────────────────────────────────────────────────
+  setAuth: (data: { session_token: string; user_id: number }) => void;
+
   // ── Reset (logout) ────────────────────────────────────────────────────
   reset: () => void;
 }
@@ -81,6 +84,9 @@ const useStore = create<StoreState>()(
             ? s.bannedActors
             : [...s.bannedActors, name],
         })),
+
+      setAuth: (data) =>
+        set({ userId: data.user_id, sessionToken: data.session_token }),
 
       tourCompleted: false,
       setTourCompleted: () => set({ tourCompleted: true }),

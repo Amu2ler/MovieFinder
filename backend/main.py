@@ -12,7 +12,7 @@ import database
 from database import create_tables
 from rate_limit import limiter
 from recommender.engine import build_faiss_index
-from routers import interactions, library, movies, recommendations, users
+from routers import auth, interactions, library, movies, recommendations, users
 from seed_data import seed, seed_from_tmdb
 
 load_dotenv()
@@ -73,6 +73,7 @@ async def security_headers(request: Request, call_next):
     return response
 
 
+app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(movies.router)
 app.include_router(interactions.router)

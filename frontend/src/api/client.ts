@@ -60,6 +60,18 @@ api.interceptors.response.use(
   }
 );
 
+// ── Auth ─────────────────────────────────────────────────────────────────────
+export interface AuthResponse {
+  session_token: string;
+  user_id: number;
+}
+
+export const login = (email: string, password: string): Promise<AuthResponse> =>
+  api.post<AuthResponse>("/auth/login", { email, password }).then((r) => r.data);
+
+export const register = (email: string, password: string): Promise<AuthResponse> =>
+  api.post<AuthResponse>("/auth/register", { email, password }).then((r) => r.data);
+
 // ── Users ────────────────────────────────────────────────────────────────────
 export const createUser = (): Promise<UserCreateResponse> =>
   api.post<UserCreateResponse>("/users").then((r) => r.data);
