@@ -70,13 +70,14 @@ build:
 
 deploy:
   stage: deploy
+  image: debian:bookworm-slim
   needs:
     - job: build
       artifacts: true
     - test:backend
     - test:frontend
   before_script:
-    - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client rsync -y )"
+    - apt-get update -y && apt-get install -y openssh-client rsync
     - mkdir -p ~/.ssh
     - eval $(ssh-agent -s)
     # Pin the host key fingerprint instead of disabling host checking
