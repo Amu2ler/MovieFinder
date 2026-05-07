@@ -2,8 +2,6 @@
 
 import asyncio
 import math
-import os
-from typing import Optional
 
 import httpx
 
@@ -86,7 +84,7 @@ def build_feature_vector(
     return vec
 
 
-async def _get(client: httpx.AsyncClient, url: str, params: dict) -> Optional[dict]:
+async def _get(client: httpx.AsyncClient, url: str, params: dict) -> dict | None:
     try:
         resp = await client.get(url, params=params)
         if resp.status_code == 200:
