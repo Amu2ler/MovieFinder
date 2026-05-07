@@ -86,7 +86,7 @@ const useStore = create<StoreState>()(
         })),
 
       setAuth: (data) =>
-        set({ userId: data.user_id, sessionToken: data.session_token }),
+        set({ userId: data.user_id, sessionToken: data.session_token, onboardingComplete: false }),
 
       tourCompleted: false,
       setTourCompleted: () => set({ tourCompleted: true }),

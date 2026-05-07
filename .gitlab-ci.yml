@@ -99,7 +99,7 @@ deploy:
           --exclude='.env' --exclude='__pycache__' --exclude='.pytest_cache' \
           --exclude='tests' --exclude='requirements-dev.txt' \
           backend/ "$DEPLOY_USER@$SERVER:$REMOTE_PATH/backend/"
-        ssh "$DEPLOY_USER@$SERVER" "sudo systemctl restart moviefinder"
+        ssh "$DEPLOY_USER@$SERVER" "sudo /var/lib/moviefinder/venv/bin/pip install -q -r $REMOTE_PATH/backend/requirements.txt && sudo systemctl restart moviefinder"
         echo "Backend déployé et redémarré."
       else
         echo "Pas de modif backend, skip."

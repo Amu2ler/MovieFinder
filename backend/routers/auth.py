@@ -1,3 +1,4 @@
+import json
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -45,10 +46,11 @@ async def register(request: Request, body: RegisterBody, db=Depends(get_db)):
     token = secrets.token_urlsafe(32)
     password_hash = pwd_context.hash(body.password)
 
+    taste_vector = json.dumps([0.0] * 20)
     cursor = await db.execute(
         """INSERT INTO users (email, password_hash, session_token, taste_vector,
-           banned_directors, banned_actors) VALUES (?, ?, ?, '[]', '[]', '[]')""",
-        (body.email.lower(), password_hash, token),
+           banned_directors, banned_actors) VALUES (?, ?, ?, ?, '[]', '[]')""",
+        (body.email.lower(), password_hash, token, taste_vector),
     )
     await db.commit()
     return AuthResponse(session_token=token, user_id=cursor.lastrowid)
