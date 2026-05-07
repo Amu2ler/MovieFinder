@@ -89,7 +89,7 @@ deploy:
     - chmod 600 /tmp/deploy_key
     - ssh-add /tmp/deploy_key
     # Frontend (static) — atomic-ish replace
-    - rsync -az --delete --exclude=backend/ frontend/dist/ "$DEPLOY_USER@$SERVER:$REMOTE_PATH/"
+    - rsync -az --delete --exclude=backend/ --exclude=data/ frontend/dist/ "$DEPLOY_USER@$SERVER:$REMOTE_PATH/"
     - |
       if git diff --name-only HEAD~1 HEAD | grep -q "^backend/"; then
         # Backend code only — never touch *.db, *.sqlite*, .env
