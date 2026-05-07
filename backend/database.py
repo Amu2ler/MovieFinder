@@ -1,3 +1,4 @@
+import contextlib
 import os
 from pathlib import Path
 
@@ -42,10 +43,8 @@ async def create_tables():
         """)
         # Migration for existing databases
         for col_def in ("email TEXT UNIQUE", "password_hash TEXT"):
-            try:
+            with contextlib.suppress(Exception):
                 await db.execute(f"ALTER TABLE users ADD COLUMN {col_def}")
-            except Exception:
-                pass
 
         await db.execute("""
             CREATE TABLE IF NOT EXISTS movies (

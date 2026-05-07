@@ -83,7 +83,7 @@ export default function Login() {
         <p className="text-center text-slate-500 text-sm mt-6">
           Pas encore de compte ?{" "}
           <Link to="/register" className="text-brand-400 hover:text-brand-300">
-            S'inscrire
+            {"S'inscrire"}
           </Link>
         </p>
       </div>
