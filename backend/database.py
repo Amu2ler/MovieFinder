@@ -41,10 +41,17 @@ async def create_tables():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        # Migration for existing databases
-        for col_def in ("email TEXT UNIQUE", "password_hash TEXT"):
+        # Migration for existing databases. SQLite forbids ADD COLUMN with
+        # UNIQUE, so we add `email` without it and enforce uniqueness via a
+        # partial UNIQUE index (which also keeps NULL emails allowed for
+        # legacy anonymous users).
+        for col_def in ("email TEXT", "password_hash TEXT"):
             with contextlib.suppress(Exception):
                 await db.execute(f"ALTER TABLE users ADD COLUMN {col_def}")
+        await db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique "
+            "ON users(email) WHERE email IS NOT NULL"
+        )
 
         await db.execute("""
             CREATE TABLE IF NOT EXISTS movies (
