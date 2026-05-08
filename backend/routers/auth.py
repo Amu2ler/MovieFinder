@@ -32,6 +32,21 @@ class LoginBody(BaseModel):
 class AuthResponse(BaseModel):
     session_token: str
     user_id: int
+    onboarding_complete: bool
+
+
+# Threshold: a user is considered onboarded once they've rated at least this
+# many films. Onboarding presents 9-10 calibration films; 5 is a forgiving
+# floor that handles users who quit a few films early.
+ONBOARDING_INTERACTION_THRESHOLD = 5
+
+
+async def _has_onboarded(db, user_id: int) -> bool:
+    async with db.execute(
+        "SELECT COUNT(*) FROM interactions WHERE user_id = ?", (user_id,)
+    ) as cursor:
+        row = await cursor.fetchone()
+    return (row[0] if row else 0) >= ONBOARDING_INTERACTION_THRESHOLD
 
 
 @router.post("/register", response_model=AuthResponse, status_code=201)
@@ -53,7 +68,9 @@ async def register(request: Request, body: RegisterBody, db=Depends(get_db)):
         (body.email.lower(), password_hash, token, taste_vector),
     )
     await db.commit()
-    return AuthResponse(session_token=token, user_id=cursor.lastrowid)
+    return AuthResponse(
+        session_token=token, user_id=cursor.lastrowid, onboarding_complete=False
+    )
 
 
 @router.post("/login", response_model=AuthResponse)
@@ -68,4 +85,9 @@ async def login(request: Request, body: LoginBody, db=Depends(get_db)):
     if not row or not pwd_context.verify(body.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
 
-    return AuthResponse(session_token=row["session_token"], user_id=row["id"])
+    onboarded = await _has_onboarded(db, row["id"])
+    return AuthResponse(
+        session_token=row["session_token"],
+        user_id=row["id"],
+        onboarding_complete=onboarded,
+    )

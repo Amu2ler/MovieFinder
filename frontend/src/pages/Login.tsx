@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/client";
+import { extractApiError } from "../lib/apiError";
 import useStore from "../store/useStore";
 
 export default function Login() {
@@ -20,10 +21,7 @@ export default function Login() {
       setAuth(data);
       navigate("/", { replace: true });
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-        "Erreur de connexion";
-      setError(msg);
+      setError(extractApiError(err, "Erreur de connexion"));
     } finally {
       setLoading(false);
     }

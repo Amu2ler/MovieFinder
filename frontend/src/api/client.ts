@@ -64,6 +64,7 @@ api.interceptors.response.use(
 export interface AuthResponse {
   session_token: string;
   user_id: number;
+  onboarding_complete: boolean;
 }
 
 export const login = (email: string, password: string): Promise<AuthResponse> =>

@@ -35,7 +35,7 @@ interface StoreState {
   resetTour: () => void;
 
   // ── Auth ──────────────────────────────────────────────────────────────
-  setAuth: (data: { session_token: string; user_id: number }) => void;
+  setAuth: (data: { session_token: string; user_id: number; onboarding_complete: boolean }) => void;
 
   // ── Reset (logout) ────────────────────────────────────────────────────
   reset: () => void;
@@ -86,7 +86,11 @@ const useStore = create<StoreState>()(
         })),
 
       setAuth: (data) =>
-        set({ userId: data.user_id, sessionToken: data.session_token, onboardingComplete: false }),
+        set({
+          userId: data.user_id,
+          sessionToken: data.session_token,
+          onboardingComplete: data.onboarding_complete,
+        }),
 
       tourCompleted: false,
       setTourCompleted: () => set({ tourCompleted: true }),

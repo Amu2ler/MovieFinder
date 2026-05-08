@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api/client";
+import { extractApiError } from "../lib/apiError";
 import useStore from "../store/useStore";
 
 export default function Register() {
@@ -25,10 +26,7 @@ export default function Register() {
       setAuth(data);
       navigate("/", { replace: true });
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-        "Erreur lors de l'inscription";
-      setError(msg);
+      setError(extractApiError(err, "Erreur lors de l'inscription"));
     } finally {
       setLoading(false);
     }
