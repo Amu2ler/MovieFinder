@@ -1,15 +1,22 @@
 import json
 import secrets
 
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request
-from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr, field_validator
 
 from database import get_db
 from rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def _hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def _verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 
 class RegisterBody(BaseModel):
@@ -59,7 +66,7 @@ async def register(request: Request, body: RegisterBody, db=Depends(get_db)):
             raise HTTPException(status_code=400, detail="Email déjà utilisé")
 
     token = secrets.token_urlsafe(32)
-    password_hash = pwd_context.hash(body.password)
+    password_hash = _hash_password(body.password)
 
     taste_vector = json.dumps([0.0] * 20)
     cursor = await db.execute(
@@ -82,7 +89,7 @@ async def login(request: Request, body: LoginBody, db=Depends(get_db)):
     ) as cursor:
         row = await cursor.fetchone()
 
-    if not row or not pwd_context.verify(body.password, row["password_hash"]):
+    if not row or not _verify_password(body.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
 
     onboarded = await _has_onboarded(db, row["id"])
